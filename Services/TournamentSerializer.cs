@@ -16,16 +16,29 @@ namespace TurnierApp.Services
         {
             var saved = new SavedTournament
             {
-                MoreIsBetter = tournament.MoreIsBetter,
-                Rounds = tournament.Rounds.Length,
-                Players = tournament.Players.Select(p => p.Name).ToArray(),
-                Tables = tournament.Tables.Select(t => new SavedTable
+                MoreIsBetter = tournament.Settings.MorePointsAreBetter,
+                Rounds = tournament.Groups.Select(g =>
                 {
-                    Rounds = t.Rounds.Select(r => new SavedRound
+                    return new SavedTournamentRound
                     {
-                        Players = r.Players.Select(p => p.Player.Name).ToArray(),
-                    }).ToArray()
-                }).ToArray()
+                        Name = g.Name,
+                        Rounds = g.Rounds,
+                        Placements = g.Placements.Select(p => new SavedPlacement
+                        {
+                            Group = p.Group?.Name,
+                            Rank = p.Rank,
+                        }).ToArray(),
+                        Players = g.Plan?.Players?.Select(p => p.Name).ToArray(),
+                        Tables = g.Plan?.Tables.Select(t => new SavedTable
+                        {
+                            Rounds = t.Rounds.Select(r => new SavedRound
+                            {
+                                Players = r.Players.Select(p => p.Player.Name).ToArray(),
+                            }).ToArray()
+                        }).ToArray()
+                    };
+                }).ToArray(),
+                Players = tournament.Players.Select(p => p.Name).ToArray(),
             };
             var serializer = new XmlSerializer(typeof(SavedTournament));
             serializer.Serialize(target, saved);
@@ -36,15 +49,52 @@ namespace TurnierApp.Services
             var serializer = new XmlSerializer(typeof(SavedTournament));
             var saved = (SavedTournament)serializer.Deserialize(source);
 
+            var tournament = new Tournament();
+            var players = new Dictionary<string, Player>();
+            if (saved.Players != null)
+            {
+                foreach (var playerName in saved.Players)
+                {
+                    var player = new Player { Name = playerName };
+                    players.Add(playerName, player);
+                }
+            }
+            tournament.Players = players.Values.ToArray();
+            if (saved.Rounds != null)
+            {
+                foreach (var round in saved.Rounds)
+                {
+                    tournament.Groups.Add(RestoreGroup(tournament, round, saved.MoreIsBetter, players));
+                }
+            }
+            return tournament;
+        }
+
+        private static Group RestoreGroup(Tournament tournament, SavedTournamentRound saved, bool moreIsBetter, Dictionary<string, Player> players)
+        {
+            var group = new Group(tournament)
+            {
+                Name = saved.Name,
+                Rounds = saved.Rounds,
+
+            };
+            if (saved.Players != null)
+            {
+                group.Plan = RestoreTournamentGroup(saved, moreIsBetter, players);
+            }
+            return group;
+        }
+
+        private static TournamentGroup RestoreTournamentGroup(SavedTournamentRound saved, bool moreIsBetter, Dictionary<string, Player> playersDict)
+        {
             var tables = CreateTables(saved.Tables.Length, saved.Rounds);
-            var players = CreatePlayers(saved.Players);
+            var players = CreatePlayers(saved.Players, playersDict);
 
-
-            List<Player>[,] playerAssignments = RestoreAssignments(saved, players);
+            List<GroupPlayer>[,] playerAssignments = RestoreAssignments(saved, players);
 
             var roundsPerPlayer = players.ToDictionary(p => p, p => new List<PlayerRound>());
 
-            PlayerRound AddPlayerRound(Player player)
+            PlayerRound AddPlayerRound(GroupPlayer player)
             {
                 var round = new PlayerRound(player);
                 roundsPerPlayer[player].Add(round);
@@ -52,10 +102,10 @@ namespace TurnierApp.Services
             }
 
             for (int t = 0; t < saved.Tables.Length; t++)
-            {   
+            {
                 for (int r = 0; r < saved.Rounds; r++)
                 {
-                    tables[t].Rounds[r] = new Round(r, tables[t], playerAssignments[r, t].Select(AddPlayerRound).ToArray(), saved.MoreIsBetter);
+                    tables[t].Rounds[r] = new Round(r, tables[t], playerAssignments[r, t].Select(AddPlayerRound).ToArray(), moreIsBetter);
                 }
             }
 
@@ -64,12 +114,12 @@ namespace TurnierApp.Services
                 item.Key.Initialize(item.Value.ToArray());
             }
 
-            return new Tournament(tables, players, saved.Rounds, saved.MoreIsBetter);
+            return new TournamentGroup(saved.Name, tables, players, saved.Rounds, moreIsBetter);
         }
 
-        private static List<Player>[,] RestoreAssignments(SavedTournament saved, Player[] players)
+        private static List<GroupPlayer>[,] RestoreAssignments(SavedTournamentRound saved, GroupPlayer[] players)
         {
-            var result = new List<Player>[saved.Rounds, saved.Tables.Length];
+            var result = new List<GroupPlayer>[saved.Rounds, saved.Tables.Length];
             for (int t = 0; t < saved.Tables.Length; t++)
             {
                 var table = saved.Tables[t];
@@ -92,12 +142,12 @@ namespace TurnierApp.Services
             return tables;
         }
 
-        private static Player[] CreatePlayers(string[] names)
+        private static GroupPlayer[] CreatePlayers(string[] names, Dictionary<string, Player> playersLookup)
         {
-            var players = new Player[names.Length];
+            var players = new GroupPlayer[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
-                players[i] = new Player { Name = names[i] };
+                players[i] = new GroupPlayer(playersLookup[names[i]]);
             }
             return players;
         }

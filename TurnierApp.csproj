@@ -55,11 +55,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\Group.cs" />
+    <Compile Include="Models\Player.cs" />
+    <Compile Include="Models\PlayerPlacement.cs" />
+    <Compile Include="Models\Tournament.cs" />
     <Compile Include="Models\TournamentRound.cs" />
     <Compile Include="Models\TournamentTable.cs" />
     <Compile Include="Services\SerializationClasses.cs" />
     <Compile Include="Services\TournamentSerializer.cs" />
+    <Compile Include="TournamentGroupControl.xaml.cs">
+      <DependentUpon>TournamentGroupControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ViewModels\DelegateCommand.cs" />
+    <Compile Include="ViewModels\GroupViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\TableViewModel.cs" />
     <Page Include="MainWindow.xaml">
@@ -74,13 +82,17 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="TournamentGroupControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\Player.cs" />
+    <Compile Include="Models\GroupPlayer.cs" />
     <Compile Include="Models\PlayerRound.cs" />
     <Compile Include="Models\Round.cs" />
     <Compile Include="Models\Table.cs" />
-    <Compile Include="Models\Tournament.cs" />
+    <Compile Include="Models\TournamentGroup.cs" />
     <Compile Include="Services\TournamentPlanner.cs" />
     <Compile Include="Models\TournamentSettings.cs" />
     <Compile Include="Models\ViewModelBase.cs" />

@@ -8,13 +8,10 @@ namespace TurnierApp.Models
 {
     public class TournamentSettings : ViewModelBase
     {
-        private int _tables = 2;
-        private int _rounds = 30;
         private int _players;
-        private int? _maxPlayersPerTable = 2;
         private bool _morePointsAreBetter = true;
         private Player[] _playerNames;
-        private bool _orderMatters = true;
+        private bool _orderMatters = false;
         private int _attempts = 1000;
 
         public TournamentSettings()
@@ -32,18 +29,6 @@ namespace TurnierApp.Models
         {
             get => _attempts;
             set => Set(ref _attempts, value);
-        }
-
-        public int Tables
-        {
-            get => _tables;
-            set => Set(ref _tables, value);
-        }
-
-        public int? MaxPlayersPerTable
-        {
-            get => _maxPlayersPerTable;
-            set => Set(ref _maxPlayersPerTable, value);
         }
 
         public int Players
@@ -76,12 +61,6 @@ namespace TurnierApp.Models
         {
             get => _playerNames;
             private set => Set(ref _playerNames, value);
-        }
-
-        public int Rounds
-        {
-            get => _rounds;
-            set => Set(ref _rounds, value);
         }
 
         public bool MorePointsAreBetter

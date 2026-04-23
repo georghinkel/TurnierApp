@@ -10,30 +10,24 @@ namespace TurnierApp.Services
 {
     internal class TournamentPlanner
     {
-        public Tournament Plan(TournamentSettings settings, Player[] lastPlayers)
+        public TournamentGroup Plan(Group group, TournamentSettings settings, GroupPlayer[] players)
         {
-            var tables = CreateTables(settings.Tables, settings.Rounds);
-            var players = CreatePlayers(settings.Players);
+            var tables = CreateTables(group.Tables, group.Rounds);
 
-            if (lastPlayers != null)
-            {
-                TakeOverPlayerNames(settings, lastPlayers, players);
-            }
-
-            List<Player>[,] playerAssignments = FindBestAssignments(settings, players, settings.Attempts, settings.OrderMatters);
+            List<GroupPlayer>[,] playerAssignments = FindBestAssignments(group, players, settings.Attempts, settings.OrderMatters);
 
             var roundsPerPlayer = players.ToDictionary(p => p, p => new List<PlayerRound>());
 
-            PlayerRound AddPlayerRound(Player player)
+            PlayerRound AddPlayerRound(GroupPlayer player)
             {
                 var round = new PlayerRound(player);
                 roundsPerPlayer[player].Add(round);
                 return round;
             }
 
-            for (int t = 0; t < settings.Tables; t++)
+            for (int t = 0; t < group.Tables; t++)
             {
-                for (int r = 0; r < settings.Rounds; r++)
+                for (int r = 0; r < group.Rounds; r++)
                 {
                     tables[t].Rounds[r] = new Round(r, tables[t], playerAssignments[r, t].Select(AddPlayerRound).ToArray(), settings.MorePointsAreBetter);
                 }
@@ -44,17 +38,17 @@ namespace TurnierApp.Services
                 item.Key.Initialize(item.Value.ToArray());
             }
 
-            return new Tournament(tables, players, settings.Rounds, settings.MorePointsAreBetter);
+            return new TournamentGroup(group.Name, tables, players, group.Rounds, settings.MorePointsAreBetter);
         }
 
-        private List<Player>[,] FindBestAssignments(TournamentSettings settings, Player[] players, int attempts, bool orderMatters)
+        private List<GroupPlayer>[,] FindBestAssignments(Group settings, GroupPlayer[] players, int attempts, bool orderMatters)
         {
             var playerAssignments = CreateAssignments(players, settings);
             while (playerAssignments == null)
             {
                 playerAssignments = CreateAssignments(players, settings);
             }
-            var score = ScoreAssignment(playerAssignments, players, orderMatters);
+            var score = ScoreAssignment(playerAssignments, players);
 
             for (int i = 0; i < attempts; i++)
             {
@@ -63,7 +57,7 @@ namespace TurnierApp.Services
                 {
                     OptimizeOrder(alternative, players);
                 }
-                var alternativeScore = ScoreAssignment(alternative, players, orderMatters);
+                var alternativeScore = ScoreAssignment(alternative, players);
                 if (alternativeScore < score)
                 {
                     playerAssignments = alternative;
@@ -79,13 +73,15 @@ namespace TurnierApp.Services
             return playerAssignments;
         }
 
-        private void OptimizeOrder(List<Player>[,] assignments, Player[] players)
+        private void OptimizeOrder(List<GroupPlayer>[,] assignments, GroupPlayer[] players)
         {
             var indexSums = CalculateAssignmentIndexSums(assignments, players)
                 .OrderBy(kv => kv.Value).ToList();
             var average = indexSums.Average(kv => kv.Value);
 
-            while (true)
+            var attempt = 1;
+
+            while (attempt < 100)
             {
                 var playerWithHighestSum = indexSums[indexSums.Count - 1].Key;
                 var playerWithLowestSum = indexSums[0].Key;
@@ -114,12 +110,13 @@ namespace TurnierApp.Services
                 {
                     break;
                 }
+                attempt++;
             }
         }
 
-        private static void PropagateLowValue(List<KeyValuePair<Player, int>> indexSums, Player playerWithLowestSum, int lSum)
+        private static void PropagateLowValue(List<KeyValuePair<GroupPlayer, int>> indexSums, GroupPlayer playerWithLowestSum, int lSum)
         {
-            var kv = new KeyValuePair<Player, int>(playerWithLowestSum, lSum);
+            var kv = new KeyValuePair<GroupPlayer, int>(playerWithLowestSum, lSum);
             var index = 1;
             while (index < indexSums.Count && indexSums[index].Value < lSum)
             {
@@ -129,9 +126,9 @@ namespace TurnierApp.Services
             }
         }
 
-        private static void PropagateHighValue(List<KeyValuePair<Player, int>> indexSums, Player playerWithHighestSum, int hSum)
+        private static void PropagateHighValue(List<KeyValuePair<GroupPlayer, int>> indexSums, GroupPlayer playerWithHighestSum, int hSum)
         {
-            var kv = new KeyValuePair<Player, int>(playerWithHighestSum, hSum);
+            var kv = new KeyValuePair<GroupPlayer, int>(playerWithHighestSum, hSum);
             var index = indexSums.Count - 2;
             while (index >= 0 && indexSums[index].Value > hSum)
             {
@@ -141,7 +138,7 @@ namespace TurnierApp.Services
             }
         }
 
-        private List<Player> FindMatch(List<Player>[,] assignments, Predicate<List<Player>> predicate)
+        private List<GroupPlayer> FindMatch(List<GroupPlayer>[,] assignments, Predicate<List<GroupPlayer>> predicate)
         {
             for (int i = 0; i <= assignments.GetUpperBound(0); i++)
             {
@@ -156,35 +153,24 @@ namespace TurnierApp.Services
             return null;
         }
 
-        private int ScoreAssignment(List<Player>[,] assignments, Player[] players, bool orderMatters)
+        private int ScoreAssignment(List<GroupPlayer>[,] assignments, GroupPlayer[] players)
         {
             var maxOppositions = 0;
             for (int p1 = 0; p1 < players.Length; p1++)
             {
                 for (int p2 = p1 + 1; p2 < players.Length; p2++)
                 {
-                    var oppositions = assignments.Cast<List<Player>>().Count(round => round.Contains(players[p1]) && round.Contains(players[p2]));
+                    var oppositions = assignments.Cast<List<GroupPlayer>>().Count(round => round.Contains(players[p1]) && round.Contains(players[p2]));
                     maxOppositions = Math.Max(maxOppositions, oppositions);
                 }
-            }
-
-            if (orderMatters)
-            {
-                var assignmentIndices = CalculateAssignmentIndexSums(assignments, players);
-                var average = assignmentIndices.Values.Average();
-                return maxOppositions + (int)(assignmentIndices.Values.Sum(i =>
-                {
-                    var diff = average - i;
-                    return diff * diff;
-                }));
             }
 
             return maxOppositions;
         }
 
-        private static Dictionary<Player, int> CalculateAssignmentIndexSums(List<Player>[,] assignments, Player[] players)
+        private static Dictionary<GroupPlayer, int> CalculateAssignmentIndexSums(List<GroupPlayer>[,] assignments, GroupPlayer[] players)
         {
-            var assignmentIndices = new Dictionary<Player, int>();
+            var assignmentIndices = new Dictionary<GroupPlayer, int>();
             for (int p1 = 0; p1 < players.Length; p1++)
             {
                 var player = players[p1];
@@ -200,22 +186,14 @@ namespace TurnierApp.Services
             return assignmentIndices;
         }
 
-        private static void TakeOverPlayerNames(TournamentSettings settings, Player[] lastPlayers, Player[] players)
+        private List<GroupPlayer>[,] CreateAssignments(GroupPlayer[] players, Group settings)
         {
-            for (int p = 0; p < settings.Players && p < lastPlayers.Length; p++)
-            {
-                players[p].Name = lastPlayers[p].Name;
-            }
-        }
-
-        private List<Player>[,] CreateAssignments(Player[] players, TournamentSettings settings)
-        {
-            var maxPlayersPerRound = settings.Players;
+            var maxPlayersPerRound = players.Length;
             var overFill = 0;
             if (settings.MaxPlayersPerTable.HasValue)
             {
                 maxPlayersPerRound = settings.Tables * settings.MaxPlayersPerTable.Value;
-                overFill = maxPlayersPerRound * settings.Rounds % settings.Players;
+                overFill = maxPlayersPerRound * settings.Rounds % players.Length;
                 var skipRounds = overFill / maxPlayersPerRound;
                 if (skipRounds > 0)
                 {
@@ -226,26 +204,26 @@ namespace TurnierApp.Services
             var idealPlayersPerTable = maxPlayersPerRound / settings.Tables;
             var leftovers = maxPlayersPerRound % settings.Tables;
 
-            var nonIdealPlaced = new HashSet<Player>();
-            var canPlayedAgainst = players.ToDictionary(p => p, p => new List<Player>(players));
+            var nonIdealPlaced = new HashSet<GroupPlayer>();
+            var canPlayedAgainst = players.ToDictionary(p => p, p => new List<GroupPlayer>(players));
             foreach (var player in players)
             {
                 canPlayedAgainst[player].Remove(player);
             }
 
             var random = new Random();
-            var playersToAssign = new List<Player>(players.Length);
+            var playersToAssign = new List<GroupPlayer>(players.Length);
 
-            Player PickRandomPlayer(IEnumerable<Player> playerBase)
+            GroupPlayer PickRandomPlayer(IEnumerable<GroupPlayer> playerBase)
             {
                 if (!playerBase.Any()) return null;
                 var index = random.Next(playerBase.Count());
                 return playerBase.ElementAt(index);
             }
 
-            var playerAssignments = new List<Player>[settings.Rounds, settings.Tables];
+            var playerAssignments = new List<GroupPlayer>[settings.Rounds, settings.Tables];
 
-            void MarkPlayingAgainst(Player player1, Player player2)
+            void MarkPlayingAgainst(GroupPlayer player1, GroupPlayer player2)
             {
                 var possibleOpponents = canPlayedAgainst[player1];
                 possibleOpponents.Remove(player2);
@@ -258,7 +236,7 @@ namespace TurnierApp.Services
             }
 
             playersToAssign.AddRange(players);
-            var playersInRound = new List<Player>();
+            var playersInRound = new List<GroupPlayer>();
 
             for (int r = 0; r < settings.Rounds; r++)
             {
@@ -266,8 +244,8 @@ namespace TurnierApp.Services
                 playersInRound.AddRange(players);
                 for (int t = 0; t < settings.Tables; t++)
                 {
-                    IEnumerable<Player> playersForSeat = playersToAssign.Intersect(playersInRound);
-                    var playersAtTable = new List<Player>();
+                    IEnumerable<GroupPlayer> playersForSeat = playersToAssign.Intersect(playersInRound);
+                    var playersAtTable = new List<GroupPlayer>();
                     for (int p = 0; p < idealPlayersPerTable; p++)
                     {
                         if (playersToAssign.Count <= p)
@@ -329,16 +307,6 @@ namespace TurnierApp.Services
                 tables[i] = new Table(i + 1, new Round[rounds]);
             }
             return tables;
-        }
-
-        private Player[] CreatePlayers(int amount)
-        {
-            var players = new Player[amount];
-            for (int i = 0; i < amount; i++)
-            {
-                players[i] = new Player { Name = "Spieler " + (i + 1) };
-            }
-            return players;
         }
     }
 }

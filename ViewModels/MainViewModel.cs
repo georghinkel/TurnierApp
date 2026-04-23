@@ -14,15 +14,14 @@ namespace TurnierApp.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private TournamentSettings _settings = new TournamentSettings();
-        private TournamentPlanner _planner = new TournamentPlanner();
-        private Tournament _tournament;
-        private readonly ObservableCollection<TableViewModel> _tables = new ObservableCollection<TableViewModel>();
+        private readonly TournamentSettings _settings = new TournamentSettings();
+        private Tournament _tournament = new Tournament();
 
-        private DelegateCommand _createTournamentCommand;
-        private DelegateCommand _exportTournamentCommand;
-        private DelegateCommand _loadTournamentCommand;
-        private DelegateCommand _saveTournamentCommand;
+        private readonly DelegateCommand _createTournamentCommand;
+        private readonly DelegateCommand _exportTournamentCommand;
+        private readonly DelegateCommand _loadTournamentCommand;
+        private readonly DelegateCommand _saveTournamentCommand;
+        private readonly DelegateCommand _addGroupCommand;
 
         public MainViewModel()
         {
@@ -31,6 +30,25 @@ namespace TurnierApp.ViewModels
 
             _loadTournamentCommand = new DelegateCommand(LoadTournament);
             _saveTournamentCommand = new DelegateCommand(SaveTournament);
+
+            _addGroupCommand = new DelegateCommand(AddGroup);
+        }
+
+        private void AddGroup()
+        {
+            Tournament.Groups.Add(new Group(Tournament) { Name = $"Gruppe {Tournament.Groups.Count + 1}" });
+        }
+
+        public Tournament Tournament
+        {
+            get => _tournament;
+            set => Set(ref _tournament, value);
+        }
+
+        public void InitializeTournament()
+        {
+            Tournament.Players = _settings.PlayerNames;
+            Tournament.StartTournament();
         }
 
         public TournamentSettings Settings => _settings;
@@ -43,29 +61,7 @@ namespace TurnierApp.ViewModels
 
         public ICommand SaveCommand => _saveTournamentCommand;
 
-        public Tournament Tournament
-        {
-            get => _tournament;
-            private set => Set(ref _tournament, value);
-        }
-
-        public ObservableCollection<TableViewModel> Tables => _tables;
-
-        public void InitializeTournament()
-        {
-            Tournament = _planner.Plan(Settings, Tournament?.Players ?? Settings.PlayerNames);
-            InitTournamentCore();
-        }
-
-        private void InitTournamentCore()
-        {
-            Tournament.RankingChanged += Tournament_RankingChanged;
-            Tables.Clear();
-            foreach (var table in Tournament.Tables)
-            {
-                Tables.Add(new TableViewModel(table));
-            }
-        }
+        public ICommand AddGroupCommand => _addGroupCommand;
 
         public void LoadTournament()
         {
@@ -79,7 +75,6 @@ namespace TurnierApp.ViewModels
                 using (var fs = File.OpenRead(ofd.FileName))
                 {
                     Tournament = TournamentSerializer.Deserialize(fs);
-                    InitTournamentCore();
                 }
             }
         }
@@ -111,45 +106,52 @@ namespace TurnierApp.ViewModels
             {
                 using (var writer = new StreamWriter(sfd.FileName))
                 {
-                    writer.WriteLine("Ergebnisse");
-                    writer.WriteLine("==========");
+                    writer.WriteLine("# Ergebnisse");
                     writer.WriteLine();
-                    var sortedPlayers = Tournament.Players.OrderByDescending(p => p.SumRank);
-                    if (Tournament.MoreIsBetter)
-                    {
-                        sortedPlayers = sortedPlayers.ThenByDescending(p => p.SumScore);
-                    }
-                    else
-                    {
-                        sortedPlayers = sortedPlayers.ThenBy(p => p.SumScore);
-                    }
-
-                    var rank = 1;
-                    foreach (var player in sortedPlayers)
-                    {
-                        writer.WriteLine($"{rank}. {player.Name} mit {player.SumRank} Punkten ({player.SumScore} gesamt)");
-                    }
-
                     writer.WriteLine();
-                    writer.WriteLine("Ergebnisse im Detail");
-                    writer.WriteLine("--------------------");
-                    writer.WriteLine();
-                    foreach (var round in Tournament.Rounds)
+                    foreach (var group in Tournament.Groups)
                     {
-                        foreach (var table in round.Tables)
+                        if (group.Plan != null)
                         {
-                            writer.WriteLine($"* {round.Title} an {table.Title}: {string.Join(", ", table.Round.Players.OrderBy(p => p.Rank).Select(p => $"{p.Rank}. {p.Player.Name} mit {p.Score}"))}");
+                            writer.WriteLine($"## {group.Name}");
+                            writer.WriteLine();
+                            WriteTournamentGroup(writer, group.Plan);
+                            writer.WriteLine();
+                            writer.WriteLine();
                         }
                     }
                 }
             }
         }
 
-        private void Tournament_RankingChanged(object sender, EventArgs e)
+        private void WriteTournamentGroup(StreamWriter writer, TournamentGroup tournament)
         {
-            RankingChanged?.Invoke(this, e);
-        }
+            var sortedPlayers = tournament.Players.OrderByDescending(p => p.SumRank);
+            if (tournament.MoreIsBetter)
+            {
+                sortedPlayers = sortedPlayers.ThenByDescending(p => p.SumScore);
+            }
+            else
+            {
+                sortedPlayers = sortedPlayers.ThenBy(p => p.SumScore);
+            }
 
-        public event EventHandler RankingChanged;
+            var rank = 1;
+            foreach (var player in sortedPlayers)
+            {
+                writer.WriteLine($"{rank}. {player.Name} mit {player.SumRank} Punkten ({player.SumScore} gesamt)");
+            }
+
+            writer.WriteLine();
+            writer.WriteLine("### Ergebnisse im Detail");
+            writer.WriteLine();
+            foreach (var round in tournament.Rounds)
+            {
+                foreach (var table in round.Tables)
+                {
+                    writer.WriteLine($"* {round.Title} an {table.Title}: {string.Join(", ", table.Round.Players.OrderBy(p => p.Rank).Select(p => $"{p.Rank}. {p.Player.Name} mit {p.Score}"))}");
+                }
+            }
+        }
     }
 }

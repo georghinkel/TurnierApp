@@ -14,12 +14,12 @@ namespace TurnierApp.Models
         public event EventHandler ScoreChanged;
         public event EventHandler RankChanged;
 
-        public PlayerRound(Player player)
+        public PlayerRound(GroupPlayer player)
         {
             Player = player;
         }
 
-        public Player Player { get; }
+        public GroupPlayer Player { get; }
 
         public int PlayerCount { get; set; }
 

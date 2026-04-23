@@ -13,9 +13,27 @@ namespace TurnierApp.Services
 
         public string[] Players { get; set; }
 
+        public SavedTournamentRound[] Rounds { get; set; }
+    }
+
+    public class SavedTournamentRound
+    {
+        public string Name { get; set; }
+
+        public string[] Players { get; set; }
+
         public int Rounds { get; set; }
 
         public SavedTable[] Tables { get; set; }
+
+        public SavedPlacement[] Placements { get; set; }
+    }
+
+    public class SavedPlacement
+    {
+        public string Group { get; set; }
+
+        public int Rank { get; set; }
     }
 
     public class SavedRound

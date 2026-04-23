@@ -26,28 +26,5 @@ namespace TurnierApp
         {
             InitializeComponent();
         }
-
-        private void MainViewModel_RankingChanged(object sender, EventArgs e)
-        {
-            var collectionView = (CollectionView)CollectionViewSource.GetDefaultView(PlayerList.ItemsSource);
-            var main = (MainViewModel)DataContext;
-            if (main.Tournament == null) return;
-            var scoreSortDirection = main.Tournament.MoreIsBetter ? ListSortDirection.Descending : ListSortDirection.Ascending;
-            if (collectionView.SortDescriptions.Count == 0)
-            {
-                collectionView.SortDescriptions.Add(new SortDescription("SumRank", ListSortDirection.Descending));
-                collectionView.SortDescriptions.Add(new SortDescription("SumScore", scoreSortDirection));
-            }
-            else
-            {
-                var sortDesc = collectionView.SortDescriptions[1];
-                if (sortDesc.Direction != scoreSortDirection)
-                {
-                    collectionView.SortDescriptions.RemoveAt(1);
-                    collectionView.SortDescriptions.Add(new SortDescription("SumScore", scoreSortDirection));
-                }
-            }
-            collectionView.Refresh();
-        }
     }
 }
