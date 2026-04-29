@@ -27,55 +27,6 @@ namespace TurnierApp
         public TournamentGroupControl()
         {
             InitializeComponent();
-
-            DataContextChanged += TournamentGroupControl_DataContextChanged;
-        }
-
-        private void TournamentGroupControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (e.OldValue is GroupViewModel oldGroup)
-            {
-                oldGroup.RankingChanged -= OnRankingChanged;
-            }
-            if (e.NewValue is GroupViewModel newGroup)
-            {
-                newGroup.RankingChanged += OnRankingChanged;
-            }
-        }
-
-        public bool MoreIsBetter
-        {
-            get
-            {
-                if (DataContext is GroupViewModel groupView)
-                {
-                    return groupView.Tournament.MoreIsBetter;
-                }
-                return true;
-            }
-        }
-
-        private void OnRankingChanged(object sender, EventArgs e)
-        {
-            var collectionView = (CollectionView)CollectionViewSource.GetDefaultView(PlayerList.ItemsSource);
-            var main = (MainViewModel)DataContext;
-            if (main.Tournament == null) return;
-            var scoreSortDirection = MoreIsBetter ? ListSortDirection.Descending : ListSortDirection.Ascending;
-            if (collectionView.SortDescriptions.Count == 0)
-            {
-                collectionView.SortDescriptions.Add(new SortDescription("SumRank", ListSortDirection.Descending));
-                collectionView.SortDescriptions.Add(new SortDescription("SumScore", scoreSortDirection));
-            }
-            else
-            {
-                var sortDesc = collectionView.SortDescriptions[1];
-                if (sortDesc.Direction != scoreSortDirection)
-                {
-                    collectionView.SortDescriptions.RemoveAt(1);
-                    collectionView.SortDescriptions.Add(new SortDescription("SumScore", scoreSortDirection));
-                }
-            }
-            collectionView.Refresh();
         }
     }
 }

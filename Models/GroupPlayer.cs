@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,16 @@ namespace TurnierApp.Models
         public GroupPlayer(Player player)
         {
             _player = player;
+
+            _player.PropertyChanged += PropagataPropertyChanged;
+        }
+
+        private void PropagataPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(Name))
+            {
+                OnPropertyChanged(e.PropertyName);
+            }
         }
 
         public Player Player => _player;

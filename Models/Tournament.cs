@@ -183,7 +183,10 @@ namespace TurnierApp.Models
                 }
             }
 
-            _completedTournaments.Add(group.Plan);
+            if (!_completedTournaments.Contains(group.Plan))
+            {
+                _completedTournaments.Add(group.Plan);
+            }
         }
     }
 }

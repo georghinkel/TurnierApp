@@ -25,15 +25,7 @@ namespace TurnierApp.ViewModels
             CompleteGroupCommand = new DelegateCommand(CompleteGroup);
             ReplanCommand = new DelegateCommand(Replan);
 
-            AddTables();
-        }
-
-        private void AddTables()
-        {
-            foreach (var table in _tournament.Tables)
-            {
-                Tables.Add(new TableViewModel(table));
-            }
+            InitializeTournament();
         }
 
         public string Name => _group.Name;
@@ -52,8 +44,7 @@ namespace TurnierApp.ViewModels
         private void Replan()
         {
             _group.Tournament.PlanGroup(_group);
-            Tables.Clear();
-            AddTables();
+            InitializeTournament();
         }
 
         public ICommand ReplanCommand { get; }

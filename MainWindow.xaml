@@ -137,18 +137,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <GroupBox Header="{Binding Name}">
-                                <ListView ItemsSource="{Binding Players}">
-                                    <ListView.View>
-                                        <GridView>
-                                            <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Name}" />
-                                            <GridViewColumn Header="Gespielt" Width="50" DisplayMemberBinding="{Binding Completed}" />
-                                            <GridViewColumn DisplayMemberBinding="{Binding SumRank}">
-                                                <GridViewColumnHeader Content="Punkte" />
-                                            </GridViewColumn>
-                                            <GridViewColumn Header="Score" DisplayMemberBinding="{Binding SumScore}" />
-                                        </GridView>
-                                    </ListView.View>
-                                </ListView>
+                                <controls:PlayerListView DataContext="{Binding}" />
                             </GroupBox>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

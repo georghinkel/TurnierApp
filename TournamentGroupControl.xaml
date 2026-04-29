@@ -13,18 +13,7 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <ListView ItemsSource="{Binding Tournament.Players}" Grid.Column="1" x:Name="PlayerList">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Name" Width="100" DisplayMemberBinding="{Binding Name}" />
-                    <GridViewColumn Header="Gespielt" Width="50" DisplayMemberBinding="{Binding Completed}" />
-                    <GridViewColumn DisplayMemberBinding="{Binding SumRank}">
-                        <GridViewColumnHeader Content="Punkte" />
-                    </GridViewColumn>
-                    <GridViewColumn Header="Score" DisplayMemberBinding="{Binding SumScore}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <controls:PlayerListView Grid.Column="1" DataContext="{Binding Tournament}" />
         <TabControl>
             <TabItem Header="Nach Runden">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
