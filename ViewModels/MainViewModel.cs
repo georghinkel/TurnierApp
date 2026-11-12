@@ -22,6 +22,7 @@ namespace TurnierApp.ViewModels
         private readonly DelegateCommand _loadTournamentCommand;
         private readonly DelegateCommand _saveTournamentCommand;
         private readonly DelegateCommand _addGroupCommand;
+        private readonly DelegateCommand _startGroupsCommand;
 
         public MainViewModel()
         {
@@ -32,6 +33,7 @@ namespace TurnierApp.ViewModels
             _saveTournamentCommand = new DelegateCommand(SaveTournament);
 
             _addGroupCommand = new DelegateCommand(AddGroup);
+            _startGroupsCommand = new DelegateCommand(StartMissing);
         }
 
         private void AddGroup()
@@ -51,6 +53,8 @@ namespace TurnierApp.ViewModels
             Tournament.StartTournament();
         }
 
+        public void StartMissing() => Tournament.StartGroups();
+
         public TournamentSettings Settings => _settings;
 
         public ICommand CreateTournamentCommand => _createTournamentCommand;
@@ -62,6 +66,8 @@ namespace TurnierApp.ViewModels
         public ICommand SaveCommand => _saveTournamentCommand;
 
         public ICommand AddGroupCommand => _addGroupCommand;
+
+        public ICommand StartMissingCommand => _startGroupsCommand;
 
         public void LoadTournament()
         {

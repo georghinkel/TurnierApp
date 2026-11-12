@@ -48,20 +48,24 @@ namespace TurnierApp.Services
             {
                 playerAssignments = CreateAssignments(players, settings);
             }
-            var score = ScoreAssignment(playerAssignments, players);
 
-            for (int i = 0; i < attempts; i++)
+            if (settings.MaxPlayersPerTable.GetValueOrDefault() > 2)
             {
-                var alternative = CreateAssignments(players, settings);
-                if (orderMatters)
+                var score = ScoreAssignment(playerAssignments, players);
+
+                for (int i = 0; i < attempts; i++)
                 {
-                    OptimizeOrder(alternative, players);
-                }
-                var alternativeScore = ScoreAssignment(alternative, players);
-                if (alternativeScore < score)
-                {
-                    playerAssignments = alternative;
-                    score = alternativeScore;
+                    var alternative = CreateAssignments(players, settings);
+                    if (orderMatters)
+                    {
+                        OptimizeOrder(alternative, players);
+                    }
+                    var alternativeScore = ScoreAssignment(alternative, players);
+                    if (alternativeScore < score)
+                    {
+                        playerAssignments = alternative;
+                        score = alternativeScore;
+                    }
                 }
             }
 
@@ -188,6 +192,11 @@ namespace TurnierApp.Services
 
         private List<GroupPlayer>[,] CreateAssignments(GroupPlayer[] players, Group settings)
         {
+            if (settings.MaxPlayersPerTable.GetValueOrDefault() == 2 && (settings.Rounds * settings.Tables >= players.Length * (players.Length - 1) / 2))
+            {
+                return CreateDuelAssignments(players, settings);
+            }
+
             var maxPlayersPerRound = players.Length;
             var overFill = 0;
             if (settings.MaxPlayersPerTable.HasValue)
@@ -297,6 +306,47 @@ namespace TurnierApp.Services
             }
 
             return playerAssignments;
+        }
+
+        private List<GroupPlayer>[,] CreateDuelAssignments(GroupPlayer[] players, Group settings)
+        {
+            var pairs = new List<List<GroupPlayer>>();
+            for (int i = 0; i < players.Length; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    pairs.Add(new List<GroupPlayer> { players[i], players[j] });
+                }
+            }
+            var repetitions = (settings.Rounds + pairs.Count - 1) / pairs.Count;
+            var actualRounds = (pairs.Count * repetitions + settings.Tables - 1) / settings.Tables;
+            settings.Rounds = actualRounds;
+            var result = new List<GroupPlayer>[actualRounds, settings.Tables];
+            var round = 0;
+            var table = 0;
+            var random = new Random();
+            for (int i = 0; i < repetitions; i++)
+            {
+                var currentPairings = new List<List<GroupPlayer>>(pairs);
+                while (currentPairings.Any())
+                {
+                    var index = random.Next(currentPairings.Count);
+                    var pair = new List<GroupPlayer>(currentPairings[index]);
+                    if (random.NextDouble() < 0.5)
+                    {
+                        pair.Reverse();
+                    }
+                    result[round, table] = pair;
+                    currentPairings.RemoveAt(index);
+                    table++;
+                    if (table >= settings.Tables)
+                    {
+                        table = 0;
+                        round++;
+                    }
+                }
+            }
+            return result;
         }
 
         private Table[] CreateTables(int amount, int rounds)

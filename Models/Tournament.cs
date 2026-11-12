@@ -97,6 +97,11 @@ namespace TurnierApp.Models
                 }
                 group.Plan = _planner.Plan(group, Settings, players.ToArray());
             }
+            else if (group.Plan != null)
+            {
+                group.Plan = _planner.Plan(group, Settings, group.Plan.Players.Select(
+                    p => new GroupPlayer(p.Player)).ToArray());
+            }
         }
 
         public void StartGroup(Group group)
@@ -174,6 +179,16 @@ namespace TurnierApp.Models
                 ActiveGroups.Remove(viewModel);
             }
 
+            StartGroups();
+
+            if (!_completedTournaments.Contains(group.Plan))
+            {
+                _completedTournaments.Add(group.Plan);
+            }
+        }
+
+        public void StartGroups()
+        {
             foreach (var enabledGroup in Groups.Where(g => g.HasPlacements))
             {
                 if (enabledGroup.Plan == null && enabledGroup.Placements.All(pl => pl.Group.IsCompleted))
@@ -181,11 +196,6 @@ namespace TurnierApp.Models
                     PlanGroup(enabledGroup);
                     StartGroup(enabledGroup);
                 }
-            }
-
-            if (!_completedTournaments.Contains(group.Plan))
-            {
-                _completedTournaments.Add(group.Plan);
             }
         }
     }

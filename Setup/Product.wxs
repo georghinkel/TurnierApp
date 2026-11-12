@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="TurnierApp" Language="1031" Version="1.0.0.0" Manufacturer="Landmaenner" UpgradeCode="3055ac49-114e-4bbc-99b3-e88ffd4f9d0e">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+
+		<MajorUpgrade DowngradeErrorMessage="Eine neuere Version von [ProductName] ist bereits installiert." />
+		<MediaTemplate />
+
+		<Feature Id="ProductFeature" Title="Setup" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="TurnierApp" />
+			</Directory>
+			<Directory Id="DesktopFolder" />
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents">
+			<Component Id="ProductComponent" Directory="INSTALLFOLDER">
+				<File Id="ApplicationFile" Source="..\bin\Release\TurnierApp.exe" KeyPath="yes" />
+			</Component>
+			<Component Id="DesktopShortcut"
+					   Directory="DesktopFolder"
+					   Guid="7A87C8E2-EA01-4395-B6A0-BBC1180BCE13">
+				<Shortcut Id="ApplicationDesktopShortut"
+						  Name="TurnierApp"
+						  Description="TurnierApp starten"
+						  Target="[INSTALLFOLDER]TurnierApp.exe" />
+			</Component>
+					   
+		</ComponentGroup>
+	</Fragment>
+</Wix>

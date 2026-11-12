@@ -44,6 +44,7 @@ namespace TurnierApp.ViewModels
         private void Replan()
         {
             _group.Tournament.PlanGroup(_group);
+            Tournament = _group.Plan;
             InitializeTournament();
         }
 

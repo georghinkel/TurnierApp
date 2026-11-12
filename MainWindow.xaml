@@ -41,55 +41,57 @@
                         <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Tournament.Groups}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:Group}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
-                                        </Grid.RowDefinitions>
-                                        <Label Grid.Row="0" Grid.Column="0">Name:</Label>
-                                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" TextAlignment="Center" VerticalContentAlignment="Center" />
-                                        <Label Grid.Row="1" Grid.Column="0">Tische:</Label>
-                                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Tables}" TextAlignment="Center" VerticalContentAlignment="Center" />
-                                        <Label Grid.Row="2" Grid.Column="0">Runden:</Label>
-                                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Rounds}" TextAlignment="Center" VerticalContentAlignment="Center" />
-                                        <Label Grid.Row="3" Grid.Column="0">Maximale Spielerzahl</Label>
-                                        <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MaxPlayersPerTable}" TextAlignment="Center" VerticalContentAlignment="Center" />
-                                        <Label Grid.Row="4" Grid.Column="0">Plätze:</Label>
-                                        <ItemsControl Grid.Column="1" Grid.Row="4" ItemsSource="{Binding Placements}">
-                                            <ItemsControl.ItemTemplate>
-                                                <DataTemplate DataType="{x:Type models:PlayerPlacement}">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="3*" />
-                                                            <ColumnDefinition Width="*" />
-                                                            <ColumnDefinition Width="*" />
-                                                        </Grid.ColumnDefinitions>
-                                                        <ComboBox SelectedItem="{Binding Group}" ItemsSource="{Binding AllGroups}" Grid.Column="0">
-                                                            <ComboBox.ItemTemplate>
-                                                                <DataTemplate DataType="{x:Type models:Group}">
-                                                                    <TextBlock Text="{Binding Name}" />
-                                                                </DataTemplate>
-                                                            </ComboBox.ItemTemplate>
-                                                        </ComboBox>
-                                                        <TextBox Text="{Binding Rank}" Grid.Column="1" TextAlignment="Center" VerticalAlignment="Center" />
-                                                        <Button Grid.Column="2" Command="{Binding RemoveCommand}">Löschen</Button>
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </ItemsControl.ItemTemplate>
-                                        </ItemsControl>
-                                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
-                                            <Button Command="{Binding AddPlacementCommand}" Width="120" Margin="5">Platzierung hinzufügen</Button>
-                                            <Button Command="{Binding RemoveCommand}" Width="60" Margin="5">Löschen</Button>
-                                        </StackPanel>
-                                    </Grid>
+                                    <GroupBox Header="{Binding Name}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <Label Grid.Row="0" Grid.Column="0">Name:</Label>
+                                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Name}" TextAlignment="Center" VerticalContentAlignment="Center" />
+                                            <Label Grid.Row="1" Grid.Column="0">Tische:</Label>
+                                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Tables}" TextAlignment="Center" VerticalContentAlignment="Center" />
+                                            <Label Grid.Row="2" Grid.Column="0">Runden:</Label>
+                                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Rounds}" TextAlignment="Center" VerticalContentAlignment="Center" />
+                                            <Label Grid.Row="3" Grid.Column="0">Maximale Spielerzahl</Label>
+                                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding MaxPlayersPerTable}" TextAlignment="Center" VerticalContentAlignment="Center" />
+                                            <Label Grid.Row="4" Grid.Column="0">Plätze:</Label>
+                                            <ItemsControl Grid.Column="1" Grid.Row="4" ItemsSource="{Binding Placements}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate DataType="{x:Type models:PlayerPlacement}">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="3*" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <ComboBox SelectedItem="{Binding Group}" ItemsSource="{Binding AllGroups}" Grid.Column="0">
+                                                                <ComboBox.ItemTemplate>
+                                                                    <DataTemplate DataType="{x:Type models:Group}">
+                                                                        <TextBlock Text="{Binding Name}" />
+                                                                    </DataTemplate>
+                                                                </ComboBox.ItemTemplate>
+                                                            </ComboBox>
+                                                            <TextBox Text="{Binding Rank}" Grid.Column="1" TextAlignment="Center" VerticalAlignment="Center" />
+                                                            <Button Grid.Column="2" Command="{Binding RemoveCommand}">Löschen</Button>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                                                <Button Command="{Binding AddPlacementCommand}" Width="120" Margin="5">Platzierung hinzufügen</Button>
+                                                <Button Command="{Binding RemoveCommand}" Width="60" Margin="5">Löschen</Button>
+                                            </StackPanel>
+                                        </Grid>
+                                    </GroupBox>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -111,6 +113,7 @@
                         <Label Grid.Column="0" Grid.Row="8">Reihenfolge beachten:</Label>
                         <CheckBox IsChecked="{Binding Settings.OrderMatters}" Grid.Column="1" Grid.Row="8" />
                         <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.Column="1" HorizontalAlignment="Center">
+                            <Button Width="100" Margin="5" Command="{Binding StartMissingCommand}">Fehlende Gruppen neu starten</Button>
                             <Button Width="100" Margin="5" Command="{Binding LoadCommand}">Laden</Button>
                             <Button Width="100" Margin="5" Command="{Binding SaveCommand}">Speichern</Button>
                             <Button Width="100" Margin="5" Command="{Binding ExportCommand}">Exportieren</Button>
